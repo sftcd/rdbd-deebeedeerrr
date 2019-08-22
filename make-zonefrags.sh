@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# set -x
+set -x
 
 # Call our zonefile fragment producer code for each
-# relevant relationship (or disavowal)
+# key and relevant relationship (or disavowal)
 
 # This code assumes that the private key for a specific
 # Relating-domain "R" is stored in $PRIVKEYDIR/hash(R).priv
@@ -11,6 +11,9 @@
 # i18n for file names.
 # If such a private key file exists, we'll use that and
 # not overwrite public key values
+
+# set directories
+RDIR="$HOME/code/rdbd-deebeedeerrr"
 
 function usage()
 {
@@ -101,6 +104,18 @@ then
     exit 1
 fi
 
+# prep values for zone fragment, these could be parameterised
+# later, but later is fine
+RDBD_RRTYPE="TYPE65443"
+RBDDKEY_RRTYPE="TYPE65448"
+TTL="3600"
+
+# check if we have relevant keys, files are named after hash of
+# Relating-domain (in case of i18n and for fun:-)
+hashname=`echo -e "$RELATING" | $OBIN sha256 | awk '{print $2}'`
+privfilename=$PRIVKEYDIR/$hashname.priv
+pubfilename=$PRIVKEYDIR/$hashname.pub
+sigparms=""
 if [[ "$SIGN" == "yes" ]]
 then
     if [ ! -d $PRIVKEYDIR ]
@@ -108,8 +123,6 @@ then
         mkdir -p $PRIVKEYDIR
     fi
 
-    hashname=`echo -e "$RELATING" | $OBIN sha256 | awk '{print $2}'`
-    privfilename=$PRIVKEYDIR/$hashname.priv
     if [ ! -f $privfilename ]
     then
         echo "Can't read $privfilename (based on $RELATING) - making one"
@@ -117,16 +130,24 @@ then
         then
             # 32 random octets are good enough
             dd if=/dev/urandom count=32 bs=1 >$privfilename
+            $RDIR/ed25519-signer.py -s $privfilename -r $RELATING -d $RELATED >signer.out
+            PUB=`base64 ed25519.pub`
+            KEYID=`$RDIR/keytag3.py -a 15 -p $PUB`
+            sigparms="-s eddsa -p $privfilename"
         fi
         if [[ "$RSA" == "yes" ]]
         then
-            $OBIN req -batch -new -x509 -days 3650 \
-	            -newkey rsa:2048 -keyout $privfilename  -out $PRIVKEYDIR/$hashname.csr  \
-	            -config /etc/ssl/openssl.cnf -passin pass:$PASS \
-	            -subj "/C=IE/ST=Laighin/O=rdbd/CN=$RELATING" \
-	            -passout pass:$PASS 
+            $OBIN genrsa -out $privfilename 2048 >/dev/null 2>&1
+            $OBIN rsa -in $privfilename -out $pubfilename.pem -pubout -outform PEM >/dev/null 2>&1
+            PUB=`cat $pubfilename.pem | awk '!/----/' | tr '\n' ' ' | sed -e 's/ //g'`
+            echo -e $PUB >$pubfilename
+            KEYID=`$RDIR/keytag3.py -a 8 -p $PUB`
+            echo "Keyid is $KEYID"
+            sigparms="-s rsa --private $privfilename --public $pubfilename"
         fi
     fi
 fi
 
-# ok, inputs are validated, time to do stuff...
+# call our python zone file fragment producing code
+$RDIR/make-rdbdfrag.py -i $RELATING -d $RELATED $sigparms -t $TTL -o $ZfDIR -t $TAG
+

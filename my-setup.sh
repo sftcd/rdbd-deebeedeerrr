@@ -3,7 +3,7 @@
 # call make-zone.sh for the various domains about which I (the 
 # author:-) care
 RDIR="$HOME/code/rdbd-deebeedeerrr"
-BIN="$RDIR/make-zonefrag.sh"
+BIN="$RDIR/make-zonefrags.sh"
 
 # places for things
 export PRIVKEYDIR="$RDIR/keys"
