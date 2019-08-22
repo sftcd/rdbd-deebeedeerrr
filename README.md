@@ -1,6 +1,6 @@
 # rdbd-deebeedeerrr
 
-Initial proof-of-concept implemention for [draft-brotman-rdbd](https://tools.ietf.org/html/draft-brotman-rdbd).
+Initial proof-of-concept implementation for [draft-brotman-rdbd](https://tools.ietf.org/html/draft-brotman-rdbd).
 As always, DON'T USE THIS - IT'S JUST DEMO CODE!
 
 RDBD is a draft trying to provide a way to assert or disavow relationships 
