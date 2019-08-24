@@ -6,7 +6,7 @@ RDIR="$HOME/code/rdbd-deebeedeerrr"
 BIN="$RDIR/make-zonefrags.sh"
 
 # places for things
-export PRIVKEYDIR="$RDIR/keys"
+export KEYDIR="$RDIR/keys"
 export ZFDIR="$RDIR/zonefrags"
 
 $BIN -i tolerantnetworks.com -d tolerantnetworks.ie 
