@@ -9,11 +9,15 @@ BIN="$RDIR/make-zonefrags.sh"
 export KEYDIR="$RDIR/keys"
 export ZFDIR="$RDIR/zonefrags"
 
-$BIN -i tolerantnetworks.com -d tolerantnetworks.ie 
-$BIN -i tolerantnetworks.com -d my-own.ie 
-$BIN -i tolerantnetworks.com -d my-own.net 
-$BIN -t 0 -i tolerantnetworks.com -d my-own.com 
-$BIN -s -i tolerantnetworks.com -d hoba.ie 
+# generrate new key pairs 
+$BIN -g -i tolerantnetworks.com >>$ZFDIR/tolerantnetworks.com.zone
+$BIN -g --rsa -i tolerantnetworks.ie >>$ZFDIR/tolerantnetworks.ie.zone
 
-$BIN -i tolerantnetworks.ie -d tolerantnetworks.com 
-$BIN -sr -i tolerantnetworks.ie -d hoba.ie 
+$BIN -i tolerantnetworks.com -d tolerantnetworks.ie  >>$ZFDIR/tolerantnetworks.ie.zone
+$BIN -i tolerantnetworks.com -d my-own.ie >>$ZFDIR/my-own.ie.zone
+$BIN -i tolerantnetworks.com -d my-own.net  >>$ZFDIR/my-own.net.zone
+$BIN -t 0 -i tolerantnetworks.com -d my-own.com >>$ZFDIR/tolerantnetworks.com.zone
+$BIN -s -i tolerantnetworks.com -d hoba.ie  >>$ZFDIR/hoba.ie.zone
+
+$BIN -i tolerantnetworks.ie -d tolerantnetworks.com  >>$ZFDIR/tolerantnetworks.com.zone
+$BIN --sign --rsa -i tolerantnetworks.ie -d hoba.ie  >>$ZFDIR/hoba.ie.zone

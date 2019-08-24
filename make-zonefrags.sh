@@ -22,6 +22,7 @@ function usage()
     echo "Create the relevant zonefile fragments matching the ipnputs"
     echo "-h - produce this"
     echo "-v - be verbose"
+    echo "-g - generate new key pair"
     echo "-r - use RSA"
     echo "-e - use EdDSA"
     echo "-i - specify the relating domain to use"
@@ -40,7 +41,6 @@ function hashname()
 
 # Set default values if not already set in the environment
 : "${KEYDIR:="."}"
-: "${ZFDIR:="."}"
 : "${VERBOSE:="no"}"
 : "${TAG:="1"}"
 : "${SIGN:="no"}"
@@ -52,8 +52,11 @@ function hashname()
 RELATING=""
 RELATED=""
 
+# don't allow overriding this via environment, not sure why:-)
+KEYGEN="no"
+
 # options may be followed by one colon to indicate they have a required argument
-if ! options=$(getopt -s bash -o i:d:p:t:z:shver -l relating:,related:,privdir:,tag:,zdir,sign,help,verbose,eddsa,rsa -- "$@")
+if ! options=$(getopt -s bash -o i:d:p:t:shverg -l relating:,related:,privdir:,tag:,sign,help,verbose,eddsa,rsa,keygen -- "$@")
 then
 	# something went wrong, getopt will put out an error message for us
 	exit 1
@@ -65,11 +68,11 @@ do
 	case "$1" in
 		-h|--help) usage;;
         -v|--verbose) VERBOSE="yes";;
+        -g|--keygen) KEYGEN="yes"; RSA="no";;
         -s|--sign) SIGN="yes";;
         -e|--eddsa) EDDSA="yes"; RSA="no";;
         -r|--rsa) RSA="yes"; EDDSA="no";;
         -d|--related) RELATED=$2; shift;;
-        -z|--zdir) ZFDIR=$2; shift;;
         -i|--relating) RELATING=$2; shift;;
         -p|--privdir) KEYDIR=$2; shift;;
         -t|--tag) TAG=$2; shift;;
@@ -84,17 +87,6 @@ if [[ "x$RELATING" == "x" ]]
 then
     echo "No relating domain specified - exiting"
     exit 1
-fi
-
-if [[ "x$RELATED" == "x" ]]
-then
-    echo "No related domain specified - exiting"
-    exit 1
-fi
-
-if [ ! -d $ZFDIR ]
-then
-    mkdir -p $ZFDIR
 fi
 
 if [[ "x$OBIN" == "x" ]]
@@ -114,7 +106,7 @@ TTL="3600"
 hashname=`echo -e "$RELATING" | $OBIN sha256 | awk '{print $2}'`
 privfilename=$KEYDIR/$hashname.priv
 pubfilename=$KEYDIR/$hashname.pub
-if [[ "$SIGN" == "yes" ]]
+if [[ "$KEYGEN" == "yes" ]]
 then
     if [ ! -d $KEYDIR ]
     then
@@ -122,32 +114,65 @@ then
     fi
     if [[ "$EDDSA" == "yes" ]]
     then
+        # 32 random octets are good enough
+        dd if=/dev/urandom count=32 bs=1 >$privfilename 2>/dev/null
         if [ ! -f $privfilename ]
         then
-            #echo "Can't read private key file for $RELATING - making one"
-            # 32 random octets are good enough
-            dd if=/dev/urandom count=32 bs=1 >$privfilename 2>/dev/null
-            if [ ! -f $privfilename ]
-            then
-                echo "Could't make private key file for $RELATING - exiting"
-                exit 3
-            fi
-            fsz=`wc -c $privfilename | awk '{print $1}'`
-            if [[ "$fsz" != "32" ]]
-            then
-                echo "Private key file for $RELATING is weird size - exiting"
-                echo "Offending file is $privfilename"
-                exit 4
-            fi
-            $RDIR/ed25519-makekey.py -s $privfilename -p $pubfilename 
-            # output zone file fragment with public key
-            b64pub=`base64 -w 48 $pubfilename  | sed -e 's/^/            /'`
-            echo -e "$RELATING. $TTL IN $RDBDKEY_RRTYPE 0 3 8 (\n$b64pub)"
+            echo "Could't make private key file for $RELATING - exiting"
+            exit 3
         fi
+        fsz=`wc -c $privfilename | awk '{print $1}'`
+        if [[ "$fsz" != "32" ]]
+        then
+            echo "Private key file for $RELATING is weird size - exiting"
+            echo "Offending file is $privfilename"
+            exit 4
+        fi
+        $RDIR/ed25519-makekey.py -s $privfilename -p $pubfilename 
+        # output zone file fragment with public key
+        b64pub=`base64 -w 48 $pubfilename  | sed -e 's/^/            /'`
+        echo -e "$RELATING. $TTL IN $RDBDKEY_RRTYPE 0 3 8 (\n$b64pub)"
         if [ ! -f $pubfilename ]
         then
             echo "Something went wrong generating a key pair - exiting"
             exit 5
+        fi
+    elif [[ "$RSA" == "yes" ]]
+    then
+        $OBIN genrsa -out $privfilename 2048 >/dev/null 2>&1
+        $OBIN rsa -in $privfilename -out $pubfilename -pubout -outform PEM >/dev/null 2>&1
+        # output zone file fragment with public key
+        b64pub=`base64 -w 48 $pubfilename  | sed -e 's/^/            /'`
+        echo -e "$RELATING. $TTL IN $RDBDKEY_RRTYPE 0 3 8 (\n$b64pub)"
+        if [ ! -f $pubfilename ]
+        then
+            echo "Something went wrong generating a key pair - exiting"
+            exit 5
+        fi
+    fi
+    exit 0
+fi
+
+# if we get here we should also have a related domain
+if [[ "x$RELATED" == "x" ]]
+then
+    echo "No related domain specified - exiting"
+    exit 1
+fi
+
+if [[ "$SIGN" == "yes" ]]
+then
+    if [[ "$EDDSA" == "yes" ]]
+    then
+        if [ ! -f $privfilename ]
+        then
+            echo "Can't access private key - exiting"
+            exit 5
+        fi
+        if [ ! -f $pubfilename ]
+        then
+            echo "Can't access public key - exiting"
+            exit 6
         fi
         PUB=`base64 $pubfilename`
         KEYID=`$RDIR/keytag3.py -a 15 -p $PUB`
@@ -161,17 +186,13 @@ then
     then
         if [ ! -f $privfilename ]
         then
-            #echo "Can't read private key file for $RELATING - making one"
-            $OBIN genrsa -out $privfilename 2048 >/dev/null 2>&1
-            $OBIN rsa -in $privfilename -out $pubfilename -pubout -outform PEM >/dev/null 2>&1
-            # output zone file fragment with public key
-            b64pub=`base64 -w 48 $pubfilename  | sed -e 's/^/            /'`
-            echo -e "$RELATING. $TTL IN $RDBDKEY_RRTYPE 0 3 8 (\n$b64pub)"
+            echo "Can't access private key - exiting"
+            exit 5
         fi
         if [ ! -f $pubfilename ]
         then
-            echo "Something went wrong generating a key pair - exiting"
-            exit 5
+            echo "Can't access public key - exiting"
+            exit 6
         fi
         PUB=`cat $pubfilename | awk '!/----/' | tr '\n' ' ' | sed -e 's/ //g'`
         KEYID=`$RDIR/keytag3.py -a 8 -p $PUB`
