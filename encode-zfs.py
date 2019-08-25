@@ -155,7 +155,7 @@ def encodem():
     ah=encoded.hex()
     wspace='             '
     lfa="".join(ah[i:i+45] + "\n"+wspace for i in range(0,len(ah),45))
-    print(preamble+"\#"+str(elen)+" (\n"+wspace+lfa+")")
+    print(preamble+"\# "+str(elen)+" (\n"+wspace+lfa+")")
     return
 
 if __name__ == "__main__":
