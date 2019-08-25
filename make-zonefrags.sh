@@ -17,7 +17,7 @@ RDIR="$HOME/code/rdbd-deebeedeerrr"
 
 function usage()
 {
-	echo "$0 -i relating-domain -d related-domain [-t tag-no ] [-p privkeydir] [-ershv]"
+    echo "$0 -i relating-domain -d related-domain [-t tag-no ] [-p privkeydir] [-ershv]"
     echo ""
     echo "Create the relevant zonefile fragments matching the ipnputs"
     echo "-h - produce this"
@@ -30,13 +30,7 @@ function usage()
     echo "-p - specify the private key file directory"
     echo "-t - specify the rdbd-tag value to use (1=avow, 0=disavow, default is 1)"
     echo "-s - make a digital signature for this"
-	exit 99
-}
-
-function hashname()
-{
-    name=$1
-    hash=`echo -e $name  | openssl sha256` 
+    exit 99
 }
 
 # Set default values if not already set in the environment
@@ -58,15 +52,15 @@ KEYGEN="no"
 # options may be followed by one colon to indicate they have a required argument
 if ! options=$(getopt -s bash -o i:d:p:t:shverg -l relating:,related:,privdir:,tag:,sign,help,verbose,eddsa,rsa,keygen -- "$@")
 then
-	# something went wrong, getopt will put out an error message for us
-	exit 1
+    # something went wrong, getopt will put out an error message for us
+    exit 1
 fi
 #echo "|$options|"
 eval set -- "$options"
 while [ $# -gt 0 ]
 do
-	case "$1" in
-		-h|--help) usage;;
+    case "$1" in
+        -h|--help) usage;;
         -v|--verbose) VERBOSE="yes";;
         -g|--keygen) KEYGEN="yes"; RSA="no";;
         -s|--sign) SIGN="yes";;
@@ -76,11 +70,11 @@ do
         -i|--relating) RELATING=$2; shift;;
         -p|--privdir) KEYDIR=$2; shift;;
         -t|--tag) TAG=$2; shift;;
-		(--) shift; break;;
-		(-*) echo "$0: error - unrecognized option $1" 1>&2; exit 1;;
-		(*)  break;;
-	esac
-	shift
+        (--) shift; break;;
+        (-*) echo "$0: error - unrecognized option $1" 1>&2; exit 1;;
+        (*)  break;;
+    esac
+    shift
 done
 
 if [[ "x$RELATING" == "x" ]]
@@ -152,6 +146,7 @@ then
     fi
     # output zone file fragment with public key
     $RDIR/encode-zfs.py -T $RDBDKEY_RRTYPE -o $RELATING. -t $TTL $KEYPARMS
+    # And we're done generating a key pair
     exit 0
 fi
 
@@ -162,54 +157,41 @@ then
     exit 1
 fi
 
-
 SIGPARMS=""
 if [[ "$SIGN" == "yes" ]]
 then
+    if [ ! -f $privfilename ]
+    then
+        echo "Can't access private key - exiting"
+        exit 5
+    fi
+    if [ ! -f $pubfilename ]
+    then
+        echo "Can't access public key - exiting"
+        exit 6
+    fi
+    TMPSIG=`mktemp`
     if [[ "$EDDSA" == "yes" ]]
     then
-        if [ ! -f $privfilename ]
-        then
-            echo "Can't access private key - exiting"
-            exit 5
-        fi
-        if [ ! -f $pubfilename ]
-        then
-            echo "Can't access public key - exiting"
-            exit 6
-        fi
         PUB=`base64 $pubfilename`
         KEYID=`$RDIR/keytag3.py -a 15 -p $PUB`
         sigalg="15"
         tbs="relating=$RELATING\nrelated=$RELATED\nrdbd-tag=$TAG\nkey-tag=$KEYID\nsig-alg=$sigalg\n"
-        TMPSIG=`mktemp`
         $RDIR/ed25519-signer.py -s $privfilename -m $tbs -o $TMPSIG
         b64sig=`base64 -w 0 $TMPSIG`
-        rm -f $TMPSIG
     elif [[ "$RSA" == "yes" ]]
     then
-        if [ ! -f $privfilename ]
-        then
-            echo "Can't access private key - exiting"
-            exit 5
-        fi
-        if [ ! -f $pubfilename ]
-        then
-            echo "Can't access public key - exiting"
-            exit 6
-        fi
         PUB=`cat $pubfilename | awk '!/----/' | tr '\n' ' ' | sed -e 's/ //g'`
         KEYID=`$RDIR/keytag3.py -a 8 -p $PUB`
         sigalg="8"
         tbs="relating=$RELATING\nrelated=$RELATED\nrdbd-tag=$TAG\nkey-tag=$KEYID\nsig-alg=$sigalg\n"
         TMPTBS=`mktemp`
         echo -e $tbs >$TMPTBS
-        TMPSIG=`mktemp`
         $OBIN dgst -sha256 -sign $privfilename -out $TMPSIG $TMPTBS
         rm -f $TMPTBS
         b64sig=`base64 -w 0 $TMPSIG`
-        rm -f $TMPSIG
     fi
+    rm -f $TMPSIG
     SIGPARMS=" -k $KEYID -a $sigalg -s $b64sig"
 fi
 
