@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 import os,argparse, sys, binascii
 from eddsa2 import Ed25519
 from keytag3 import calc_keyid

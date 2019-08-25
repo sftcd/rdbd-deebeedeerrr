@@ -160,6 +160,8 @@ then
     exit 1
 fi
 
+
+SIGPARMS=""
 if [[ "$SIGN" == "yes" ]]
 then
     if [[ "$EDDSA" == "yes" ]]
@@ -206,7 +208,7 @@ then
         b64sig=`base64 -w 48 $TMPSIG  | sed -e 's/^/            /'`
         rm -f $TMPSIG
     fi
-    SIGFRAG=" $KEYID $sigalg (\n$b64sig )"
+    SIGPAMRS=" -k $KEYID -a $sigalg -s $b64sig"
 fi
 
 # output zone file fragment with or without signature
@@ -215,9 +217,11 @@ then
     # the only real semantic we know is the negative disavowal one
     # in which case the fragment goes into the Relating-domain 
     # zone file
-    echo -e "$RELATING.\t\t$TTL IN $RDBD_RRTYPE $TAG $RELATED. $SIGFRAG"
+    #echo -e "$RELATING.\t\t$TTL IN $RDBD_RRTYPE $TAG $RELATED. $SIGPARMS"
+    $RDIR/encode-zfs.py -T $RDBD_RRTYPE -o $RELATING. -t $TTL -g $TAG -r $RELATED. $SIGPARMS
 else
-    echo -e "$RELATED.\t\t$TTL IN $RDBD_RRTYPE $TAG $RELATING. $SIGFRAG"
+    #echo -e "$RELATED.\t\t$TTL IN $RDBD_RRTYPE $TAG $RELATING. $SIGPARMS"
+    $RDIR/encode-zfs.py -T $RDBD_RRTYPE -o $RELATED. -t $TTL -g $TAG -r $RELATING. $SIGPARMS
 fi
 
 
