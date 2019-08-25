@@ -207,17 +207,34 @@ then
     SIGPARMS=" -k $KEYID -a $sigalg -s $b64sig"
 fi
 
+# if the Related-domain is actually a URL then the we want the record to go into
+# the Relating-domain zone
+URL="no"
+if [[ $RELATED == https://* ]]
+then
+    URL="yes"
+fi
+
 # output zone file fragment with or without signature
 if [[ "$TAG" == "0" ]]
 then
-    # the only real semantic we know is the negative disavowal one
+    # other than URLs the only semantic we know is the negative disavowal one
     # in which case the fragment goes into the Relating-domain 
     # zone file
-    #echo -e "$RELATING.\t\t$TTL IN $RDBD_RRTYPE $TAG $RELATED. $SIGPARMS"
-    $RDIR/encode-zfs.py -T $RDBD_RRTYPE -o $RELATING. -t $TTL -g $TAG -r $RELATED. $SIGPARMS
+    if [[ "$URL" == "yes" ]]
+    then
+        # URLs don't get a trailing dot:-)
+        $RDIR/encode-zfs.py -T $RDBD_RRTYPE -o $RELATING. -t $TTL -g $TAG -r $RELATED $SIGPARMS
+    else
+        $RDIR/encode-zfs.py -T $RDBD_RRTYPE -o $RELATING. -t $TTL -g $TAG -r $RELATED. $SIGPARMS
+    fi
 else
-    #echo -e "$RELATED.\t\t$TTL IN $RDBD_RRTYPE $TAG $RELATING. $SIGPARMS"
-    $RDIR/encode-zfs.py -T $RDBD_RRTYPE -o $RELATED. -t $TTL -g $TAG -r $RELATING. $SIGPARMS
+    if [[ "$URL" == "yes" ]]
+    then
+        $RDIR/encode-zfs.py -T $RDBD_RRTYPE -o $RELATING. -t $TTL -g $TAG -r $RELATED $SIGPARMS
+    else
+        $RDIR/encode-zfs.py -T $RDBD_RRTYPE -o $RELATED. -t $TTL -g $TAG -r $RELATING. $SIGPARMS
+    fi
 fi
 
 
