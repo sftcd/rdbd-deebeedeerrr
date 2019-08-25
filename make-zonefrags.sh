@@ -131,7 +131,7 @@ then
         $RDIR/ed25519-makekey.py -s $privfilename -p $pubfilename 
         # output zone file fragment with public key
         b64pub=`base64 -w 48 $pubfilename  | sed -e 's/^/            /'`
-        echo -e "$RELATING. $TTL IN $RDBDKEY_RRTYPE 0 3 8 (\n$b64pub)"
+        echo -e "$RELATING. $TTL IN $RDBDKEY_RRTYPE 0 3 15 (\n$b64pub)"
         if [ ! -f $pubfilename ]
         then
             echo "Something went wrong generating a key pair - exiting"

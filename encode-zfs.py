@@ -4,6 +4,10 @@ import os,argparse, sys, binascii
 
 # encode binary format RR values for inclusion in zone files
 
+# couple of fixed-ish points
+MINTTL=1
+MAXTTL=31*24*2600 # about a month
+
 # output here is of the possibly multi-line text zone fragment 
 # to include in the zone file, the last element of that will
 # be the binary encoding of the DNS answer - as that's binary
@@ -89,7 +93,7 @@ def encode_rdbdkey(preamble, args):
 def encodem():
     parser=argparse.ArgumentParser(description='RDBD RR encoding')
     parser.add_argument('-o','--owner',dest='owner', help='owner name for entry')
-    parser.add_argument('-t','--ttl',dest='ttl', help='ttl value to use')
+    parser.add_argument('-t','--ttl',dest='ttl', type=int, help='ttl value to use')
     parser.add_argument('-T','--type',dest='type', help='type code to use')
     parser.add_argument('-g','--tag',dest='tag', type=int, help='RDBD tag value to use')
     parser.add_argument('-r','--related',dest='related', help='related name value to use')
@@ -109,7 +113,10 @@ def encodem():
     if args.ttl is None:
         print("Error - no ttl given - exiting")
         sys.exit(3)
-    preamble=args.owner+"\t\tIN "+args.ttl+" "+args.type+" "
+    if args.ttl < MINTTL or args.ttl > MAXTTL:
+        print("Error - bad ttl value (given : "+str(args.ttl)+", min: "+str(MINTTL)+", max: "+str(MAXTTL)+" - exiting")
+        sys.exit(4)
+    preamble=args.owner+"\t"+str(args.ttl)+" IN "+args.type+" "
     if args.type.upper() == "TYPE65443" or args.type.upper() == "RDBD": 
         encoded=encode_rdbd(preamble,args)
     if args.type.upper() == "TYPE65448" or args.type.upper() == "RDBDKEY":
