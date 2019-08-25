@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# set -x
+
 # call make-zone.sh for the various domains about which I (the 
 # author:-) care
 RDIR="$HOME/code/rdbd-deebeedeerrr"

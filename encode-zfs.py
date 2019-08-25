@@ -31,16 +31,16 @@ def encode_rdbd(preamble, args):
     # check we have the right args 
     if args.tag is None:
         print("No RDBD tag supplied - exiting")
-        return(21)
+        sys.exit(21)
     if args.related is None:
         print("No related name supplied - exiting")
-        return(22)
+        sys.exit(22)
     # remaining fields are optional, but if we get one, we need 'em all
     dosig=False
     if (args.keytag is not None or args.sigalg is not None or args.sig is not None):
         if (args.keytag is None or args.sigalg is None or args.sig is None):
             print("Missing signature fields - exiting")
-            return(23)
+            sys.exit(23)
         dosig=True
     # check if related name is DNS name or https URL
     URL=False
@@ -48,14 +48,14 @@ def encode_rdbd(preamble, args):
         URL=True
     if args.tag > 65535 or args.tag < 0:
         print("Bad value for RDBD tag ("+str(args.tag)+") - exiting")
-        return(24)
+        sys.exit(24)
     if dosig is True:
         if args.keytag > 65535 or args.keytag < 0:
             print("Bad value for RDBD keytag ("+str(args.keytag)+") - exiting")
-            return(24)
+            sys.exit(24)
         if args.sigalg > 255 or args.sigalg < 0:
             print("Bad value for sigalg ("+str(args.sigalg)+") - exiting")
-            return(24)
+            sys.exit(24)
     encoded=bytearray()
     # encode tag
     encoded.append(args.tag>>8);
@@ -84,11 +84,40 @@ def encode_rdbd(preamble, args):
         encoded.append(args.sigalg)
         rawsig=binascii.a2b_base64(args.sig)
         encoded+=rawsig
-
     return encoded
 
 def encode_rdbdkey(preamble, args):
-    return 0
+    '''
+    Recall: we're copying the wire format of DNSKEY, which is:
+                        1 1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2 3 3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |              Flags            |    Protocol   |   Algorithm   |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   /                                                               /
+   /                            Public Key                         /
+   /                                                               /
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    '''
+    # check we have the right args 
+    if args.public is None:
+        print("No public key supplied - exiting")
+        sys.exit(32)
+    if args.sigalg is None:
+        print("No sigalg supplied - exiting")
+        sys.exit(33)
+    encoded=bytearray()
+    # encode flags as zero
+    encoded.append(0)
+    encoded.append(0)
+    # encode protocol as 3, dunno why - TODO: figure out
+    encoded.append(3)
+    # sigalg
+    encoded.append(args.sigalg)
+    # base64 decode public key and encode
+    rawpub=binascii.a2b_base64(args.public)
+    encoded+=rawpub
+    return encoded
 
 def encodem():
     parser=argparse.ArgumentParser(description='RDBD RR encoding')
@@ -120,7 +149,8 @@ def encodem():
     if args.type.upper() == "TYPE65443" or args.type.upper() == "RDBD": 
         encoded=encode_rdbd(preamble,args)
     if args.type.upper() == "TYPE65448" or args.type.upper() == "RDBDKEY":
-        encoded=encode_rdbdkey(apreamble,rgs)
+        encoded=encode_rdbdkey(preamble,args)
+    #print("Encoded="+str(encoded))
     elen=len(encoded)
     ah=encoded.hex()
     wspace='             '

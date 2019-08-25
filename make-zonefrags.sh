@@ -112,6 +112,7 @@ then
     then
         mkdir -p $KEYDIR
     fi
+    KEYPARMS=""
     if [[ "$EDDSA" == "yes" ]]
     then
         # 32 random octets are good enough
@@ -129,27 +130,28 @@ then
             exit 4
         fi
         $RDIR/ed25519-makekey.py -s $privfilename -p $pubfilename 
-        # output zone file fragment with public key
-        b64pub=`base64 -w 48 $pubfilename  | sed -e 's/^/            /'`
-        echo -e "$RELATING. $TTL IN $RDBDKEY_RRTYPE 0 3 15 (\n$b64pub)"
         if [ ! -f $pubfilename ]
         then
             echo "Something went wrong generating a key pair - exiting"
             exit 5
         fi
+        b64pub=`base64 -w 0 $pubfilename`
+        KEYPARMS=" -a 15 -p $b64pub"
     elif [[ "$RSA" == "yes" ]]
     then
         $OBIN genrsa -out $privfilename 2048 >/dev/null 2>&1
         $OBIN rsa -in $privfilename -out $pubfilename -pubout -outform PEM >/dev/null 2>&1
-        # output zone file fragment with public key
-        b64pub=`base64 -w 48 $pubfilename  | sed -e 's/^/            /'`
-        echo -e "$RELATING. $TTL IN $RDBDKEY_RRTYPE 0 3 8 (\n$b64pub)"
         if [ ! -f $pubfilename ]
         then
             echo "Something went wrong generating a key pair - exiting"
             exit 5
         fi
+        # b64 decode then re-encode to get rid of PEMery
+        b64pub=`cat $pubfilename | sed -e '/----.*PUBLIC KEY----\|^[[:space:]]*$/d' | base64 -d | base64 -w 0`
+        KEYPARMS=" -a 8 -p $b64pub"
     fi
+    # output zone file fragment with public key
+    $RDIR/encode-zfs.py -T $RDBDKEY_RRTYPE -o $RELATING. -t $TTL $KEYPARMS
     exit 0
 fi
 
@@ -182,7 +184,7 @@ then
         tbs="relating=$RELATING\nrelated=$RELATED\nrdbd-tag=$TAG\nkey-tag=$KEYID\nsig-alg=$sigalg\n"
         TMPSIG=`mktemp`
         $RDIR/ed25519-signer.py -s $privfilename -m $tbs -o $TMPSIG
-        b64sig=`base64 -w 48 $TMPSIG  | sed -e 's/^/            /'`
+        b64sig=`base64 -w 0 $TMPSIG`
         rm -f $TMPSIG
     elif [[ "$RSA" == "yes" ]]
     then
@@ -205,10 +207,10 @@ then
         TMPSIG=`mktemp`
         $OBIN dgst -sha256 -sign $privfilename -out $TMPSIG $TMPTBS
         rm -f $TMPTBS
-        b64sig=`base64 -w 48 $TMPSIG  | sed -e 's/^/            /'`
+        b64sig=`base64 -w 0 $TMPSIG`
         rm -f $TMPSIG
     fi
-    SIGPAMRS=" -k $KEYID -a $sigalg -s $b64sig"
+    SIGPARMS=" -k $KEYID -a $sigalg -s $b64sig"
 fi
 
 # output zone file fragment with or without signature
