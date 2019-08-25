@@ -2,15 +2,14 @@
 
 # set -x
 
-# Call our zonefile fragment producer code for each
-# key and relevant relationship (or disavowal)
+# RDBD and RDBDKEY zonefile fragment producer, see the
+# usage function for details.
 
-# This code assumes that the private key for a specific
-# Relating-domain "R" is stored in $KEYDIR/hash(R).priv
+# The key pair values for Relating-domain "R" is stored in 
+# $KEYDIR/sha256(R).priv and $KEYDIR/sha256(R).pub.
+
 # The hashing is so that we don't need to worry about
-# i18n for file names.
-# If such a private key file exists, we'll use that and
-# not overwrite public key values
+# i18n for file names, and because I can:-)
 
 # set directories
 RDIR="$HOME/code/rdbd-deebeedeerrr"
@@ -30,6 +29,19 @@ function usage()
     echo "-p - specify the private key file directory"
     echo "-t - specify the rdbd-tag value to use (1=avow, 0=disavow, default is 1)"
     echo "-s - make a digital signature for this"
+    echo ""
+    echo "You can either generate a key pair (RDBDKEY) or create one,"
+    echo "posssibly signed, RDBD record."
+    echo ""
+    echo "To generate a key pair you need to use -g, and specify the"
+    echo "Relating-domain. You can specify RSA or Ed25519 (default)."
+    echo ""
+    echo "To generate an RDBD record, you need to specify both the"
+    echo "Relating-domaian (-i) and Related-domain (-d), and the RDBD "
+    echo "tag (-t). If you want that signed, use -s, and then the "
+    echo "relevant private key needs to exist and match the signing "
+    echo "algorithm (-r or -e) which again will default to Ed25519."
+
     exit 99
 }
 
