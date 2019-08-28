@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# set -x
+set -x
 
 # RDBD and RDBDKEY zonefile fragment producer, see the
 # usage function for details.
