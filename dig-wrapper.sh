@@ -67,12 +67,11 @@ function extract_related()
     related=""
     rrval=${1:4}
     rrlen=${#rrval}
-    chars_remaining=$rrlen
     # value now should start with ascii-hex of a length prefix string 
     # containing an https URL or a wire-format DNS name
-    label_len=${rrval:0:2}
+    ah_label_len=${rrval:0:2}
     # convert ascii-hex to decimal
-    label_len=`printf "%d" 0x$label_len`
+    label_len=`printf "%d" 0x$ah_label_len`
     offset=2
     chars_remaining=$((rrlen-offset))
     while ((label_len!=0 && chars_remaining>0))
@@ -87,7 +86,8 @@ function extract_related()
             related="$related.$label"
         fi
         offset=$((offset+label_enc_len))
-        label_len=${rrval:$offset:2}
+        ah_label_len=${rrval:$offset:2}
+        label_len=`printf "%d" 0x$ah_label_len`
         offset=$((offset+2))
         chars_remaining=$((rrlen-offset))
     done

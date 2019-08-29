@@ -6,8 +6,10 @@ As always with POC code: DON'T USE THIS - IT'S JUST DEMO CODE!
 RDBD is a draft trying to provide a way to assert or disavow relationships 
 between domains in the DNS. (RDBD == Related Domains By DNS.)
 
-To start with, this code just handles generating the zonefile fragments 
-needed to make a basic set of assertions.
+To start with, this code just generates the zonefile fragments needed to make a
+basic set of assertions, including signing those, if desired, and a wrapper for
+``dig`` to make looking at those a bit easier. (That wrapper doesn't yet verify
+signatures.) 
 
 Some of the python code here is inherited from the code to generate the
 [samples](https://github.com/abrotman/related-domains-by-dns/master/sample)
@@ -25,11 +27,11 @@ encoding.
 The zone fragments produced seem to be syntactically correct enough
 to publish and query at least.
 
-In order to try see how RDBD support might usefully be 
-added to tooling like ``dig``, I've made a wrapper script
-[``dig-wrapper.sh``](./dig-wrapper.sh) that's fairly
-basic but does some decoding of the ASCII hex that you'd
-otherwise see with dig. (That's not yet finished btw.)
+In order to try see how RDBD support might usefully be added to tooling like
+``dig``, I've made a wrapper script [``dig-wrapper.sh``](./dig-wrapper.sh)
+that's fairly basic, so is likely to break if you supply complicated dig
+command line arguments, but it does decode the ASCII hex that you'd otherwise
+see with dig. 
 
             $ ./dig-wrapper.sh RBDD tolerantnetworks.ie
             ; <<>> DiG 9.11.5-P1-1ubuntu2.5-Ubuntu <<>> RDBD tolerantnetworks.ie
