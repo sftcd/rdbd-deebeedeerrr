@@ -43,13 +43,50 @@ then
     exit $?
 fi
 
+# extract RR value from dig line output - can be space
+# separated set of values from the 7th word on the line
+# to the end
+function extract_rrvalue()
+{
+    line=$*
+    rrvalue=""
+    count=0
+    for word in $line
+    do
+        if ((count>=6))
+        then
+            rrvalue="$rrvalue$word"
+        fi
+        count=$((count+1))
+    done
+    echo $rrvalue
+}
+
 function rdbd_present()
 {
     line=$*
     if [[ "$line" == *"TYPE65443"* ]]
     then
         newline=${line/TYPE65443/RDBD}
-        echo "Foo: $newline"
+        leader=`echo $newline | awk '{print $1," ",$2," ",$3," ",$4}'`
+        rrlen=`echo $newline | awk '{print $6}'`
+        rrvalue=`extract_rrvalue $newline`
+        # if rrvalue starts with 0001 then related
+        # if 0000 then unrelated, other values we
+        # don't understand
+        if [[ "$rrvalue" == "" ]]
+        then
+            # the query line
+            echo $newline
+        elif [[ "$rrvalue" == 0000* ]]
+        then
+            echo "$leader UNRELATED $rrlen $rrvalue"
+        elif [[ "$rrvalue" == 0001* ]]
+        then
+            echo "$leader RELATED $rrlen $rrvalue"
+        else
+            echo "$leader RBDB-TAG:[${rrvalue0:3}] $rrlen $rrvalue"
+        fi
     else
         echo "$line"
     fi
