@@ -95,6 +95,9 @@ function extract_related()
     then
         # that should be a signature
         echo $related
+        # add 4 to the return value - we skipped over those
+        # bytes (the rdbd-tag) when setting the rrval value 
+        # at the start
         return $((offset+4))
     else
         echo $related
@@ -123,14 +126,16 @@ function rdbd_present()
         leader=`echo $newline | awk '{print $1," ",$2," ",$3," ",$4}'`
         rrlen=`echo $newline | awk '{print $6}'`
         rrvalue=`extract_rrvalue $newline`
-        # if rrvalue starts with 0001 then related
-        # if 0000 then unrelated, other tag values: we
-        # don't understand 'em yet:-)
         if [[ "$rrvalue" == "" || "$newline" == *"DiG"* || "$newline" == *"RRSIG"* ]]
         then
-            # the query line
+            # if there's no value or it's the query string or an RRSIG then
+            # we've done enough just replacing the TYPE65443 with RDBD
             echo $newline
         else
+            # this is an RDBD answer, so parse it some...
+            # if rrvalue starts with 0001 then related
+            # if 0000 then unrelated, other tag values: we
+            # don't understand 'em yet:-)
             rel="RDBD-TAG:[${rrvalue:0:3}]"
             if [[ "$rrvalue" == 0000* ]]
             then
@@ -139,9 +144,12 @@ function rdbd_present()
             then
                 rel="RELATED"
             fi
+            # extract the Related-domain field (a name or URL)
+            # if there's also a signature present the function
+            # will return the offset where we can find that
+            # or zero if there's no signature
             related_domain=`extract_related $rrvalue`
             sigoff=$?
-            #echo "related_domain: |$related_domain|"
             if [[ "$sigoff" == "0" ]]
             then
                 echo "$leader $rel $related_domain"
@@ -162,7 +170,20 @@ function rdbdkey_present()
     if [[ "$line" == *"TYPE65448"* ]]
     then
         newline=${line/TYPE65448/RDBDKEY}
-        echo "Bar: $newline"
+        leader=`echo $newline | awk '{print $1," ",$2," ",$3," ",$4}'`
+        rrvalue=`extract_rrvalue $newline`
+        if [[ "$rrvalue" == "" || "$newline" == *"DiG"* || "$newline" == *"RRSIG"* ]]
+        then
+            # if there's no value or it's the query string or an RRSIG then
+            # we've done enough just replacing the TYPE65448 with RDBD
+            echo $newline
+        else
+            hex_alg=${rrvalue:6:2}
+            alg=`printf "%d" 0x$hex_alg`
+            hex_pub=${rrvalue:8}
+            b64pub=`echo $hex_pub | xxd -r -p | base64 -w0`
+            echo "$leader Alg: $alg Public key: $b64pub"
+        fi
     else
         echo "$line"
     fi
