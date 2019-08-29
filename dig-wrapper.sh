@@ -126,7 +126,7 @@ function rdbd_present()
         # if rrvalue starts with 0001 then related
         # if 0000 then unrelated, other tag values: we
         # don't understand 'em yet:-)
-        if [[ "$rrvalue" == "" || "$newline" == *"DiG"* ]]
+        if [[ "$rrvalue" == "" || "$newline" == *"DiG"* || "$newline" == *"RRSIG"* ]]
         then
             # the query line
             echo $newline
