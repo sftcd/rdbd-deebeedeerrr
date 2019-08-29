@@ -27,4 +27,8 @@ $BIN -s -i tolerantnetworks.ie -d tolerantnetworks.com  >>$ZFDIR/tolerantnetwork
 $BIN -i tolerantnetworks.ie -d my-own.ie >>$ZFDIR/my-own.ie.zone
 $BIN -i tolerantnetworks.ie -d my-own.net  >>$ZFDIR/my-own.net.zone
 $BIN -i tolerantnetworks.ie -d https://tolerantnetworks.com/rdbdeze.json >>$ZFDIR/tolerantnetworks.ie.zone
+# and the reverse of what's in my-own.ie and my-own.net  
+# (just to highligh the unrelated my-own.com really)
+$BIN -d tolerantnetworks.ie -i my-own.ie >>$ZFDIR/tolerantnetworks.ie.zone
+$BIN -d tolerantnetworks.ie -i my-own.net >>$ZFDIR/tolerantnetworks.ie.zone
 $BIN -t 0 -i tolerantnetworks.ie -d my-own.com >>$ZFDIR/tolerantnetworks.ie.zone

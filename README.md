@@ -34,26 +34,30 @@ command line arguments, but it does decode the ASCII hex that you'd otherwise
 see with dig. 
 
             $ ./dig-wrapper.sh RBDD tolerantnetworks.ie
+            
             ; <<>> DiG 9.11.5-P1-1ubuntu2.5-Ubuntu <<>> RDBD tolerantnetworks.ie
             ;; global options: +cmd
             ;; Got answer:
-            ;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 28078
-            ;; flags: qr rd ra ad; QUERY: 1, ANSWER: 3, AUTHORITY: 0, ADDITIONAL: 1
+            ;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 14530
+            ;; flags: qr rd ra ad; QUERY: 1, ANSWER: 5, AUTHORITY: 0, ADDITIONAL: 1
             
             ;; OPT PSEUDOSECTION:
             ; EDNS: version: 0, flags:; udp: 4096
+            ; COOKIE: 2af5cdc7ab2ca0d14d5138eb5d67e2e8eb8821c686cd0284 (good)
             ;; QUESTION SECTION:
             ;tolerantnetworks.ie. IN RDBD
             
             ;; ANSWER SECTION:
-            tolerantnetworks.ie.   2009   IN   RDBD UNRELATED my-own.com
-            tolerantnetworks.ie.   2009   IN   RDBD RELATED tolerantnetworks.com KeyId: 50885 Alg: 8 Sig: UIi04agbJqhhEGE6x+6G1QeGe+Ji/gFeVNrfmNnbPg2w1wPv17jnzJ9g1mdTYk2em7obcuayMornBZbq0RslBDR2cHloJh/Uejekhji7M7oQTxwi0grO7VXfW+tkbpN1jAl6uCW0uq0C7OT5JxA7t1e8SdRetvriJhGbO2oXo3vRmgAWeOISZzJpEt3hlvN8uSbPRHB/C0c5yfHH++FGvJmAjFgJniN/tTnKesTE7s6RkUaVzcW9xgyZpVzSTsk/whUfThvf+oVp5AWoga75DA1nQK7fS9qjsuar409aW1+O32Tu4dMDC5TGXU2og3bQx1RWWp3ilnHZ9sdDbv4oOLo=
-            tolerantnetworks.ie.   2009   IN   RDBD RELATED https://tolerantnetworks.com/rdbdeze.json
+            tolerantnetworks.ie.   3600   IN   RDBD RELATED tolerantnetworks.com KeyId: 50885 Alg: 8 Sig: UIi04agbJqhhEGE6x+6G1QeGe+Ji/gFeVNrfmNnbPg2w1wPv17jnzJ9g1mdTYk2em7obcuayMornBZbq0RslBDR2cHloJh/Uejekhji7M7oQTxwi0grO7VXfW+tkbpN1jAl6uCW0uq0C7OT5JxA7t1e8SdRetvriJhGbO2oXo3vRmgAWeOISZzJpEt3hlvN8uSbPRHB/C0c5yfHH++FGvJmAjFgJniN/tTnKesTE7s6RkUaVzcW9xgyZpVzSTsk/whUfThvf+oVp5AWoga75DA1nQK7fS9qjsuar409aW1+O32Tu4dMDC5TGXU2og3bQx1RWWp3ilnHZ9sdDbv4oOLo=
+            tolerantnetworks.ie.   3600   IN   RDBD RELATED https://tolerantnetworks.com/rdbdeze.json
+            tolerantnetworks.ie.   3600   IN   RDBD RELATED my-own.net
+            tolerantnetworks.ie.   3600   IN   RDBD RELATED my-own.ie
+            tolerantnetworks.ie.   3600   IN   RDBD UNRELATED my-own.com
             
-            ;; Query time: 347 msec
+            ;; Query time: 181 msec
             ;; SERVER: 127.0.0.1#53(127.0.0.1)
-            ;; WHEN: Thu Aug 29 14:14:30 IST 2019
-            ;; MSG SIZE rcvd: 483
+            ;; WHEN: Thu Aug 29 15:36:24 IST 2019
+            ;; MSG SIZE rcvd: 600
 
             
             $ ./dig-wrapper.sh RBDD tolerantnetworks.com
