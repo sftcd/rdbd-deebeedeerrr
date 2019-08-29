@@ -33,7 +33,7 @@ that's fairly basic, so is likely to break if you supply complicated dig
 command line arguments, but it does decode the ASCII hex that you'd otherwise
 see with dig. 
 
-            $ ./dig-wrapper.sh RBDD tolerantnetworks.ie
+            $ ./dig-wrapper.sh RDBD tolerantnetworks.ie
             
             ; <<>> DiG 9.11.5-P1-1ubuntu2.5-Ubuntu <<>> RDBD tolerantnetworks.ie
             ;; global options: +cmd
@@ -60,8 +60,8 @@ see with dig.
             ;; MSG SIZE rcvd: 600
 
             
-            $ ./dig-wrapper.sh RBDD tolerantnetworks.com
-
+            $ ./dig-wrapper.sh RDBD tolerantnetworks.com
+            
             ; <<>> DiG 9.11.5-P1-1ubuntu2.5-Ubuntu <<>> RDBD tolerantnetworks.com
             ;; global options: +cmd
             ;; Got answer:
@@ -81,6 +81,28 @@ see with dig.
             ;; WHEN: Thu Aug 29 14:15:05 IST 2019
             ;; MSG SIZE rcvd: 171
 
+
+            $ ./dig-wrapper.sh RDBDKEY tolerantnetworks.ie
+
+            ; <<>> DiG 9.11.5-P1-1ubuntu2.5-Ubuntu <<>> RDBDKEY tolerantnetworks.ie
+            ;; global options: +cmd
+            ;; Got answer:
+            ;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 30827
+            ;; flags: qr rd ra ad; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+            
+            ;; OPT PSEUDOSECTION:
+            ; EDNS: version: 0, flags:; udp: 4096
+            ;; QUESTION SECTION:
+            ;tolerantnetworks.ie. IN RDBDKEY
+            
+            ;; ANSWER SECTION:
+            tolerantnetworks.ie.   3600   IN   RDBDKEY Alg: 15 Public key: b9jYj7ZU9P5cc4QKm0LYnjwikNf4N0pHYOGKFKVxHEs=
+            
+            ;; Query time: 437 msec
+            ;; SERVER: 127.0.0.1#53(127.0.0.1)
+            ;; WHEN: Thu Aug 29 15:47:06 IST 2019
+            ;; MSG SIZE rcvd: 115
+            
             
 
 Of course you can also still use ``dig`` to see the
