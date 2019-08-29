@@ -62,7 +62,15 @@ def encode_rdbd(preamble, args):
     encoded.append(args.tag%256);
     # encode name or URL
     if URL is True:
-        encoded += args.related.encode('utf-8')
+        encoded_url = args.related.encode('utf-8')
+        encoded_url_len=len(encoded_url)
+        if encoded_url_len > 255:
+            print("Bummer: URL too long - exiting")
+            sys.exit(65)
+        encoded.append(encoded_url_len)
+        encoded += encoded_url
+        # add a zero after so we're compatible with DNS name encoding
+        encoded.append(0)
     else:
         # ok we'll try encode into DNS wire format, probably badly;-(
         name_enc=bytearray()
@@ -76,7 +84,7 @@ def encode_rdbd(preamble, args):
             name_enc.append(len(ulabel)%256)
             name_enc+=ulabel
         encoded+=name_enc
-        encoded.append(0)
+        # encoded.append(0)
     if dosig is True:
         # add signature shite
         encoded.append(args.keytag>>8);

@@ -20,7 +20,7 @@ $BIN -g -i tolerantnetworks.ie >>$ZFDIR/tolerantnetworks.ie.zone
 # assert both are related (bidirectionally), both are DNSSEC
 # signed so the signature is just for fun really:-)
 $BIN -s --rsa -i tolerantnetworks.com -d tolerantnetworks.ie  >>$ZFDIR/tolerantnetworks.ie.zone
-$BIN -i tolerantnetworks.ie -d tolerantnetworks.com  >>$ZFDIR/tolerantnetworks.com.zone
+$BIN -s -i tolerantnetworks.ie -d tolerantnetworks.com  >>$ZFDIR/tolerantnetworks.com.zone
 
 # Make other assertions related to my-own.ie and my-own.net 
 # which are ours. We also disavow my-own.com which is not ours.
