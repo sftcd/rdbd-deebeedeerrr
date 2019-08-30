@@ -189,7 +189,7 @@ then
         KEYID=`$RDIR/keytag3.py -a 15 -p $PUB`
         sigalg="15"
         tbs="relating=$RELATING\nrelated=$RELATED\nrdbd-tag=$TAG\nkey-tag=$KEYID\nsig-alg=$sigalg\n"
-        $RDIR/ed25519-signer.py -s $privfilename -m $tbs -o $TMPSIG
+        $RDIR/ed25519-signverify.py -s $privfilename -m $tbs -o $TMPSIG
         b64sig=`base64 -w 0 $TMPSIG`
     elif [[ "$RSA" == "yes" ]]
     then
