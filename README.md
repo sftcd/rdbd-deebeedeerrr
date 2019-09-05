@@ -16,7 +16,7 @@ Some of the python code here is inherited from the code to generate the
 in the RDBD Internet-draft. The core Curve25519 python code is just extracted from
 [RFC8032](https://tools.ietf.org/html/rfc8032).
 
-The [my-seutp.sh](./my-setup.sh) bash script is specific to the 
+The [my-setup.sh](./my-setup.sh) bash script is specific to the 
 set of domains for which I want to publish RDBD reords. That 
 calls [make-zonefrags.sh](./make-zonefrags.sh)
 which generates the fragments one would need to put in a (set of) zone file(s) to
