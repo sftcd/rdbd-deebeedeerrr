@@ -1,87 +1,90 @@
 # rdbd-deebeedeerrr
 
-Initial proof-of-concept implementation for [draft-brotman-rdbd](https://tools.ietf.org/html/draft-brotman-rdbd).
-As always with POC code: DON'T USE THIS - IT'S JUST DEMO CODE!
+Initial proof-of-concept implementation for
+[draft-brotman-rdbd](https://tools.ietf.org/html/draft-brotman-rdbd).  As
+always with POC code: DON'T USE THIS - IT'S JUST DEMO CODE!
 
-RDBD is a draft trying to provide a way to assert or disavow relationships 
+RDBD is a draft trying to provide a way to assert or disavow relationships
 between domains in the DNS. (RDBD == Related Domains By DNS.)
 
-To start with, this code just generates the zonefile fragments needed to make a
-basic set of assertions, including signing those, if desired, and a wrapper for
-``dig`` to make looking at those a bit easier. (That wrapper doesn't yet verify
-signatures.) 
+This code generates the zonefile fragments needed to make a basic set of
+assertions, including signing those, if desired. 
 
-Some of the python code here is inherited from the code to generate the
-[samples](https://github.com/abrotman/related-domains-by-dns/master/sample)
-in the RDBD Internet-draft. The core Curve25519 python code is just extracted from
+There is a wrapper for ``dig`` to make looking at those a bit easier. The
+wrapper attempts to verify signatures when those are present, which seems to
+work ok. 
+
+The code here is used to generate the
+[examples](https://github.com/abrotman/related-domains-by-dns/master/mk-examples.sh)
+in the RDBD Internet-draft. The core Curve25519 python code is extracted from
 [RFC8032](https://tools.ietf.org/html/rfc8032).
 
-The [my-setup.sh](./my-setup.sh) bash script is specific to the 
-set of domains for which I want to publish RDBD reords. That 
-calls [make-zonefrags.sh](./make-zonefrags.sh)
-which generates the fragments one would need to put in a (set of) zone file(s) to
-publish a (set of) relationship(s). That in turn uses OpenSSL for
-RSA operations and python code for Ed25519 and DNS wire format
-encoding.
+The [my-setup.sh](./my-setup.sh) bash script is specific to the set of domains
+for which I want to publish RDBD reords. That calls
+[make-zonefrags.sh](./make-zonefrags.sh) which generates the fragments one
+would need to put in a (set of) zone file(s) to publish a (set of)
+relationship(s). That in turn uses OpenSSL for RSA operations and python code
+for Ed25519 and DNS wire format encoding.
 
-The zone fragments produced seem to be syntactically correct enough
-to publish and query at least.
+The zone fragments produced seem to be syntactically correct enough to publish
+and query at least.
 
 In order to try see how RDBD support might usefully be added to tooling like
-``dig``, I've made a wrapper script [``dig-wrapper.sh``](./dig-wrapper.sh)
-that's fairly basic, so is likely to break if you supply complicated dig
-command line arguments, but it does decode the ASCII hex that you'd otherwise
-see with dig. 
+``dig``, I've made a wrapper script [dig-wrapper.sh](./dig-wrapper.sh) that's
+fairly basic, so is likely to break if you supply complicated dig command line
+arguments, but it does decode the ASCII hex that you'd otherwise see with dig
+and verify signatures if those are present. 
 
             $ ./dig-wrapper.sh RDBD tolerantnetworks.ie
             
             ; <<>> DiG 9.11.5-P1-1ubuntu2.5-Ubuntu <<>> RDBD tolerantnetworks.ie
             ;; global options: +cmd
             ;; Got answer:
-            ;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 14530
+            ;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 28169
             ;; flags: qr rd ra ad; QUERY: 1, ANSWER: 5, AUTHORITY: 0, ADDITIONAL: 1
             
             ;; OPT PSEUDOSECTION:
             ; EDNS: version: 0, flags:; udp: 4096
-            ; COOKIE: 2af5cdc7ab2ca0d14d5138eb5d67e2e8eb8821c686cd0284 (good)
+            ; COOKIE: d3e26ca48862380086f4d4535d8252310dfd862ccb81379f (good)
             ;; QUESTION SECTION:
             ;tolerantnetworks.ie. IN RDBD
             
             ;; ANSWER SECTION:
-            tolerantnetworks.ie.   3600   IN   RDBD RELATED tolerantnetworks.com KeyId: 50885 Alg: 8 Sig: UIi04agbJqhhEGE6x+6G1QeGe+Ji/gFeVNrfmNnbPg2w1wPv17jnzJ9g1mdTYk2em7obcuayMornBZbq0RslBDR2cHloJh/Uejekhji7M7oQTxwi0grO7VXfW+tkbpN1jAl6uCW0uq0C7OT5JxA7t1e8SdRetvriJhGbO2oXo3vRmgAWeOISZzJpEt3hlvN8uSbPRHB/C0c5yfHH++FGvJmAjFgJniN/tTnKesTE7s6RkUaVzcW9xgyZpVzSTsk/whUfThvf+oVp5AWoga75DA1nQK7fS9qjsuar409aW1+O32Tu4dMDC5TGXU2og3bQx1RWWp3ilnHZ9sdDbv4oOLo=
-            tolerantnetworks.ie.   3600   IN   RDBD RELATED https://tolerantnetworks.com/rdbdeze.json
-            tolerantnetworks.ie.   3600   IN   RDBD RELATED my-own.net
-            tolerantnetworks.ie.   3600   IN   RDBD RELATED my-own.ie
-            tolerantnetworks.ie.   3600   IN   RDBD UNRELATED my-own.com
+            tolerantnetworks.ie.   2252   IN   RDBD RELATED https://tolerantnetworks.com/rdbdeze.json
+            tolerantnetworks.ie.   2252   IN   RDBD RELATED my-own.net
+            tolerantnetworks.ie.   2252   IN   RDBD RELATED my-own.ie
+            tolerantnetworks.ie.   2252   IN   RDBD UNRELATED my-own.com
+            tolerantnetworks.ie.   2252   IN   RDBD RELATED tolerantnetworks.com Sig: good KeyId: 50885 Alg: 8 Sig: i04agbJqhhEGE6x+6G1QeGe+Ji/gFeVNrfmNnbPg2w1wPv17jnzJ9g1mdTYk2em7obcuayMornBZbq0RslBDR2cHloJh/Uejekhji7M7oQTxwi0grO7VXfW+tkbpN1jAl6uCW0uq0C7OT5JxA7t1e8SdRetvriJhGbO2oXo3vRmgAWeOISZzJpEt3hlvN8uSbPRHB/C0c5yfHH++FGvJmAjFgJniN/tTnKesTE7s6RkUaVzcW9xgyZpVzSTsk/whUfThvf+oVp5AWoga75DA1nQK7fS9qjsuar409aW1+O32Tu4dMDC5TGXU2og3bQx1RWWp3ilnHZ9sdDbv4oOLpg==
             
-            ;; Query time: 181 msec
+            ;; Query time: 152 msec
             ;; SERVER: 127.0.0.1#53(127.0.0.1)
-            ;; WHEN: Thu Aug 29 15:36:24 IST 2019
+            ;; WHEN: Wed Sep 18 16:50:08 IST 2019
             ;; MSG SIZE rcvd: 600
-
+            
             
             $ ./dig-wrapper.sh RDBD tolerantnetworks.com
             
             ; <<>> DiG 9.11.5-P1-1ubuntu2.5-Ubuntu <<>> RDBD tolerantnetworks.com
             ;; global options: +cmd
             ;; Got answer:
-            ;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 56692
+            ;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 50000
             ;; flags: qr rd ra ad; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
             
             ;; OPT PSEUDOSECTION:
             ; EDNS: version: 0, flags:; udp: 4096
+            ; COOKIE: 4176df14ee8c4c3fbeb045705d825258161587cd1c00b08c (good)
             ;; QUESTION SECTION:
             ;tolerantnetworks.com. IN RDBD
             
             ;; ANSWER SECTION:
-            tolerantnetworks.com.   3600   IN   RDBD RELATED tolerantnetworks.ie KeyId: 1878 Alg: 15 Sig: YPT/fkaNax0VaTd0FSt5r6gkNz21aoRFoHJ/LVF6rSJoZCbO1N405veToZuomtmupnHrlyKxh4bnLkkvijUKtlA=
+            tolerantnetworks.com.   1522   IN   RDBD RELATED tolerantnetworks.ie Sig: good KeyId: 1878 Alg: 15 Sig: T/fkaNax0VaTd0FSt5r6gkNz21aoRFoHJ/LVF6rSJoZCbO1N405veToZuomtmupnHrlyKxh4bnLkkvijUKtlBQ==
             
-            ;; Query time: 386 msec
+            ;; Query time: 138 msec
             ;; SERVER: 127.0.0.1#53(127.0.0.1)
-            ;; WHEN: Thu Aug 29 14:15:05 IST 2019
-            ;; MSG SIZE rcvd: 171
-
-
+            ;; WHEN: Wed Sep 18 16:50:48 IST 2019
+            ;; MSG SIZE rcvd: 199
+            
+            
             $ ./dig-wrapper.sh RDBDKEY tolerantnetworks.ie
 
             ; <<>> DiG 9.11.5-P1-1ubuntu2.5-Ubuntu <<>> RDBDKEY tolerantnetworks.ie
@@ -102,7 +105,6 @@ see with dig.
             ;; SERVER: 127.0.0.1#53(127.0.0.1)
             ;; WHEN: Thu Aug 29 15:47:06 IST 2019
             ;; MSG SIZE rcvd: 115
-            
             
 
 Of course you can also still use ``dig`` to see the
@@ -153,6 +155,33 @@ raw values from the DNS.
             ;; WHEN: Thu Aug 29 14:13:29 IST 2019
             ;; MSG SIZE  rcvd: 143
 
+To help convince us all that the signature checking is real, 
+you can break the signatures before they are checked to see
+the "bad" output. To do that set the ``SIGBREAK`` environment
+variable to "yes" before running the wrapper, e.g.:
+
+            $ SIGBREAK=yes ./dig-wrapper.sh RDBD tolerantnetworks.com
+            BREAKING SIGNATURES as requested!!
+            
+            ; <<>> DiG 9.11.5-P1-1ubuntu2.5-Ubuntu <<>> RDBD tolerantnetworks.com
+            ;; global options: +cmd
+            ;; Got answer:
+            ;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 15246
+            ;; flags: qr rd ra ad; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+            
+            ;; OPT PSEUDOSECTION:
+            ; EDNS: version: 0, flags:; udp: 4096
+            ; COOKIE: 5d7c47e31ba67e9babe447745d8252b5dbc3da38cdefe1b4 (good)
+            ;; QUESTION SECTION:
+            ;tolerantnetworks.com. IN RDBD
+            
+            ;; ANSWER SECTION:
+            tolerantnetworks.com.   1429   IN   RDBD RELATED tolerantnetworks.ie Sig: bad KeyId: 1878 Alg: 15 Sig: T/fkaNax0VaTd0FSt5r6gkNz21aoRFoHJ/LVF6rSJoZCbO1N405veToZuomtmupnHrlyKxh4bnLkkvijUKtlBQ==
+            
+            ;; Query time: 137 msec
+            ;; SERVER: 127.0.0.1#53(127.0.0.1)
+            ;; WHEN: Wed Sep 18 16:52:20 IST 2019
+            ;; MSG SIZE rcvd: 199
             
 
 

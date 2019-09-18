@@ -68,7 +68,11 @@ def verify():
     else:
         public=binascii.a2b_base64(args.public)
     message=args.tbs.encode('utf-8')
-    signature=binascii.unhexlify(args.sig)
+    # try ascii-hex first, then base64 decode...
+    try:
+        signature=binascii.unhexlify(args.sig)
+    except:
+        signature=binascii.a2b_base64(args.sig)
 
     result = Ed25519.verify(public, message, signature)
     '''
